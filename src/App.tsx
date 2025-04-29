@@ -1,96 +1,20 @@
-import { useState } from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
+import TextExtractor from './pages/TextExtractor';
+import DbTransform from './pages/DbTransform';
 import './App.css';
-import { JsonViewer } from '@textea/json-viewer';
 
 function App() {
-  const [inputText, setInputText] = useState({
-    freeText: '',
-    customRules: '',
-  });
-  const [response, setResponse] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = async () => {
-    setLoading(true);
-    setError('');
-    setResponse(null);
-
-    try {
-      const res = await fetch('http://localhost:3000/ask', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          textField: [inputText.freeText],
-          customRules: inputText.customRules,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Server responded with status ${res.status}`);
-      }
-
-      const data = await res.json();
-      setResponse(data);
-    } catch (err) {
-      console.error('Error sending to /ask:', err);
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="App" style={{ padding: 20 }}>
-      <h1>RAG Text Extractor</h1>
+    <div style={{ padding: 20 }}>
+      <nav style={{ marginBottom: 20 }}>
+        <Link to="/" style={{ marginRight: 10 }}>Text Extractor</Link>
+        <Link to="/transform">DB Transform</Link>
+      </nav>
 
-      <h3>Property Text (freeText)</h3>
-      <textarea
-        rows={10}
-        cols={80}
-        placeholder="Paste HTML or property description here"
-        value={inputText.freeText}
-        onChange={(e) =>
-          setInputText((prev) => ({ ...prev, freeText: e.target.value }))
-        }
-        style={{ fontFamily: 'monospace', width: '100%' }}
-      />
-
-      <h3 style={{ marginTop: 20 }}>Custom Rules (markdown/plain)</h3>
-      <textarea
-        rows={6}
-        cols={80}
-        placeholder="Paste your markdown rules here"
-        value={inputText.customRules}
-        onChange={(e) =>
-          setInputText((prev) => ({ ...prev, customRules: e.target.value }))
-        }
-        style={{ fontFamily: 'monospace', width: '100%' }}
-      />
-
-      <button onClick={handleSubmit} style={{ marginTop: 20 }} disabled={loading}>
-        {loading ? 'Extracting...' : 'Extract Info'}
-      </button>
-
-      {error && (
-        <div style={{ marginTop: 20, color: 'red' }}>
-          <strong>{error}</strong>
-        </div>
-      )}
-
-      {loading && (
-        <div style={{ marginTop: 20 }}>
-          <em>Loading...</em>
-        </div>
-      )}
-
-      {response && (
-        <div style={{ marginTop: 20, textAlign: 'left' }}>
-          <JsonViewer value={response} />
-        </div>
-      )}
+      <Routes>
+        <Route path="/" element={<TextExtractor />} />
+        <Route path="/transform" element={<DbTransform />} />
+      </Routes>
     </div>
   );
 }
