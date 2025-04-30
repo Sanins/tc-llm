@@ -1,5 +1,13 @@
 import { useState } from 'react';
 import { JsonViewer } from '@textea/json-viewer';
+import {
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  CircularProgress,
+  Box,
+} from '@mui/material';
 
 export const TextExtractor = () => {
   const [inputText, setInputText] = useState({
@@ -9,6 +17,10 @@ export const TextExtractor = () => {
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [aiModel, setAiModel] = useState({
+    type: 'openai',
+    model: 'gpt-4o-mini',
+  });
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -18,18 +30,15 @@ export const TextExtractor = () => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/ask`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           textField: [inputText.freeText],
           customRules: inputText.customRules,
+          aiModel,
         }),
       });
 
-      if (!res.ok) {
-        throw new Error(`Server responded with status ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`Server responded with ${res.status}`);
 
       const data = await res.json();
       setResponse(data);
@@ -44,6 +53,20 @@ export const TextExtractor = () => {
   return (
     <div className="App" style={{ padding: 20 }}>
       <h1>RAG Text Extractor</h1>
+
+      <FormControl fullWidth style={{ marginBottom: 20 }}>
+        <InputLabel id="ai-model-label">AI Model</InputLabel>
+        <Select
+          labelId="ai-model-label"
+          value={aiModel.model}
+          onChange={(e) =>
+            setAiModel({ type: 'openai', model: e.target.value })
+          }
+          label="AI Model"
+        >
+          <MenuItem value="gpt-4o-mini">OpenAI - GPT-4o Mini</MenuItem>
+        </Select>
+      </FormControl>
 
       <h3>Property Text (freeText)</h3>
       <textarea
@@ -80,9 +103,9 @@ export const TextExtractor = () => {
       )}
 
       {loading && (
-        <div style={{ marginTop: 20 }}>
-          <em>Loading...</em>
-        </div>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+          <CircularProgress />
+        </Box>
       )}
 
       {response && (
@@ -92,6 +115,6 @@ export const TextExtractor = () => {
       )}
     </div>
   );
-}
+};
 
 export default TextExtractor;
