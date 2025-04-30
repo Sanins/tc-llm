@@ -9,6 +9,8 @@ interface PropertyNote {
   postcode: string | null;
   city: string | null;
   access_instructions: string | null;
+  confidence_tip: string | null;
+  confidence_score: string | null;
   parking_info: string | null;
   amenities: string | null;
 }
@@ -36,11 +38,13 @@ export const DbTransform = () => {
         </div>
       ),
     },
-    { field: "postcode", headerName: "Postcode", width: 120 },
+    { field: "postcode", headerName: "Postcode", width: 100 },
     { field: "parking_info", headerName: "Parking Info", width: 150 },
-    { field: "city", headerName: "City", width: 130 },
+    { field: "city", headerName: "City", width: 100 },
     { field: "access_instructions", headerName: "Access Instructions", width: 180 },
     { field: "amenities", headerName: "Amenities", width: 180 },
+    { field: "confidence_score", headerName: "Confidence Score", width: 80 },
+    { field: "confidence_tip", headerName: "Confidence Tip", width: 180 },
   ];
 
   const fetchData = async () => {
@@ -126,6 +130,8 @@ export const DbTransform = () => {
 
   const csvHeaders = [
     { label: "Access Instructions", key: "access_instructions" },
+    { label: "Confidence Tip", key: "confidence_tip" },
+    { label: "Confidence Score", key: "confidence_score" },
     { label: "Parking Info", key: "parking_info" },
     { label: "Amenities", key: "amenities" },
     { label: "Postcode", key: "postcode" },
