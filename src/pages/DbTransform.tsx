@@ -1,9 +1,11 @@
 import {
-    Paper, Select, MenuItem, FormControl, InputLabel
+    Paper, Select, MenuItem, FormControl, InputLabel,
+    AlertTitle,
+    Alert
   } from "@mui/material";
   import { DataGrid, GridColDef } from "@mui/x-data-grid";
   import { CSVLink } from "react-csv";
-  import { useEffect, useState } from "react";
+  import { useEffect, useMemo, useState } from "react";
   
   interface PropertyNote {
     id: number;
@@ -12,7 +14,7 @@ import {
     city: string | null;
     access_instructions: string | null;
     confidence_tip: string | null;
-    confidence_score: string | null;
+    confidence_score: number | null;
     parking_info: string | null;
     amenities: string | null;
   }
@@ -27,6 +29,9 @@ import {
     const [dbLoading, setDbLoading] = useState(false);
     const [csvLoading, setCsvLoading] = useState(false);
     const [aiModel, setAiModel] = useState({ type: 'openai', model: 'gpt-4o-mini' });
+    const [inputText, setInputText] = useState({
+        customRules: '',
+      });
   
     const columns: GridColDef[] = [
       { field: "id", headerName: "ID", width: 70 },
@@ -87,7 +92,7 @@ import {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ selectedIds, aiModel }),
+          body: JSON.stringify({ selectedIds, aiModel, customRules: inputText.customRules, }),
         });
   
         await fetchData();
@@ -113,7 +118,7 @@ import {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             textField: rawTexts,
-            customRules: "",
+            customRules: inputText.customRules,
             aiModel,
           }),
         });
@@ -150,6 +155,24 @@ import {
         console.error("Failed to reset DB:", err);
       }
     };
+
+    const initialValue = {
+        positive: 0,
+        warning: 0,
+        error: 0,
+    };
+    
+    const resultValues = useMemo(() => {
+        return response.reduce((acc, item) => {
+            const score = item?.confidence_score ?? null;
+    
+            if (score === 10) acc.positive += 1;
+            else if (score === 8) acc.warning += 1;
+            else if (score !== null && score < 8) acc.error += 1;
+    
+            return acc;
+        }, { ...initialValue });
+    }, [response]);
   
     return (
       <div>
@@ -169,7 +192,19 @@ import {
   
         {error && <div style={{ color: "red", marginBottom: 10 }}>{error}</div>}
         {csvError && <div style={{ color: "red", marginBottom: 10 }}>{csvError}</div>}
-  
+        
+        {resultValues.warning > 0 && (
+            <Alert severity="warning" style={{ marginBottom: 10 }}>
+                <AlertTitle>Warning: {resultValues.warning} values that need attention</AlertTitle>
+            </Alert>
+        )}
+
+        {resultValues.error > 0 && (
+            <Alert severity="error" style={{ marginBottom: 10 }}>
+                <AlertTitle>Error: {resultValues.error} values that need urgent attention</AlertTitle>
+            </Alert>
+        )}
+
         <Paper sx={{ height: 500, width: "100%" }}>
           <DataGrid
             rows={response}
@@ -189,6 +224,19 @@ import {
             }}
           />
         </Paper>
+
+        <h3 style={{ marginTop: 20 }}>Custom Rules (markdown/plain)</h3>
+        <textarea
+            rows={6}
+            cols={80}
+            placeholder="Paste your markdown rules here"
+            value={inputText.customRules}
+            onChange={(e) =>
+                setInputText((prev) => ({ ...prev, customRules: e.target.value }))
+            }
+            style={{ fontFamily: 'monospace', width: '100%' }}
+        />
+
   
         <div style={{ marginTop: 20, display: 'flex', gap: 20 }}>
           <button
