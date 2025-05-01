@@ -1,35 +1,28 @@
-import { useState } from 'react';
-import { JsonViewer } from '@textea/json-viewer';
-import {
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  CircularProgress,
-  Box,
-} from '@mui/material';
+import { useState } from "react";
+import { JsonViewer } from "@textea/json-viewer";
+import { Select, MenuItem, InputLabel, FormControl, CircularProgress, Box } from "@mui/material";
 
 export const TextExtractor = () => {
   const [inputText, setInputText] = useState({
-    freeText: '',
-    customRules: '',
+    freeText: "",
+    customRules: "",
   });
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [aiModel, setAiModel] = useState({
-    type: 'openai',
-    model: 'gpt-4o-mini',
+    type: "openai",
+    model: "gpt-4o-mini",
   });
   const handleSubmit = async () => {
     setLoading(true);
-    setError('');
+    setError("");
     setResponse(null);
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/ask`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           textField: [inputText.freeText],
           customRules: inputText.customRules,
@@ -42,8 +35,8 @@ export const TextExtractor = () => {
       const data = await res.json();
       setResponse(data);
     } catch (err) {
-      console.error('Error sending to /ask:', err);
-      setError('Something went wrong. Please try again.');
+      console.error("Error sending to /ask:", err);
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -52,20 +45,20 @@ export const TextExtractor = () => {
   const generateText = async () => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/generate-text`, {
-        method: 'POST',
+        method: "POST",
       });
 
       if (!res.ok) throw new Error(`Server responded with ${res.status}`);
 
       const data = await res.json();
-      setInputText((prev) => ({ ...prev, freeText: data.content }))
+      setInputText((prev) => ({ ...prev, freeText: data.content }));
     } catch (err) {
-      console.error('Error sending to /generate-text:', err);
-      setError('Something went wrong. Please try again.');
+      console.error("Error sending to /generate-text:", err);
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="App" style={{ padding: 20 }}>
@@ -75,27 +68,25 @@ export const TextExtractor = () => {
         <Select
           labelId="ai-model-label"
           value={aiModel.model}
-          onChange={(e) =>
-            setAiModel({ type: 'openai', model: e.target.value })
-          }
+          onChange={(e) => setAiModel({ type: e.target.value.includes("gemini") ? "gemini" : "openai", model: e.target.value })}
           label="AI Model"
         >
           <MenuItem value="gpt-4o-mini">OpenAI - GPT-4o Mini</MenuItem>
+          <MenuItem value="gemini-2.0-flash">Gemini - 2.0 Flash</MenuItem>
         </Select>
       </FormControl>
 
-
       <h3>Property Text (freeText)</h3>
-      <button onClick={generateText} style={{ marginBottom: 20 }}>Generate Text</button>
+      <button onClick={generateText} style={{ marginBottom: 20 }}>
+        Generate Text
+      </button>
       <textarea
         rows={10}
         cols={80}
         placeholder="Paste HTML or property description here"
         value={inputText.freeText}
-        onChange={(e) =>
-          setInputText((prev) => ({ ...prev, freeText: e.target.value }))
-        }
-        style={{ fontFamily: 'monospace', width: '100%' }}
+        onChange={(e) => setInputText((prev) => ({ ...prev, freeText: e.target.value }))}
+        style={{ fontFamily: "monospace", width: "100%" }}
       />
 
       <h3 style={{ marginTop: 20 }}>Custom Rules (markdown/plain)</h3>
@@ -104,30 +95,28 @@ export const TextExtractor = () => {
         cols={80}
         placeholder="Paste your markdown rules here"
         value={inputText.customRules}
-        onChange={(e) =>
-          setInputText((prev) => ({ ...prev, customRules: e.target.value }))
-        }
-        style={{ fontFamily: 'monospace', width: '100%' }}
+        onChange={(e) => setInputText((prev) => ({ ...prev, customRules: e.target.value }))}
+        style={{ fontFamily: "monospace", width: "100%" }}
       />
 
       <button onClick={handleSubmit} style={{ marginTop: 20 }} disabled={loading}>
-        {loading ? 'Extracting...' : 'Extract Info'}
+        {loading ? "Extracting..." : "Extract Info"}
       </button>
 
       {error && (
-        <div style={{ marginTop: 20, color: 'red' }}>
+        <div style={{ marginTop: 20, color: "red" }}>
           <strong>{error}</strong>
         </div>
       )}
 
       {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
           <CircularProgress />
         </Box>
       )}
 
       {response && (
-        <div style={{ marginTop: 20, textAlign: 'left' }}>
+        <div style={{ marginTop: 20, textAlign: "left" }}>
           <JsonViewer value={response} />
         </div>
       )}
