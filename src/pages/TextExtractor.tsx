@@ -21,7 +21,6 @@ export const TextExtractor = () => {
     type: 'openai',
     model: 'gpt-4o-mini',
   });
-
   const handleSubmit = async () => {
     setLoading(true);
     setError('');
@@ -50,10 +49,27 @@ export const TextExtractor = () => {
     }
   };
 
+  const generateText = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/generate-text`, {
+        method: 'POST',
+      });
+
+      if (!res.ok) throw new Error(`Server responded with ${res.status}`);
+
+      const data = await res.json();
+      setInputText((prev) => ({ ...prev, freeText: data.content }))
+    } catch (err) {
+      console.error('Error sending to /generate-text:', err);
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="App" style={{ padding: 20 }}>
       <h1>RAG Text Extractor</h1>
-
       <FormControl fullWidth style={{ marginBottom: 20 }}>
         <InputLabel id="ai-model-label">AI Model</InputLabel>
         <Select
@@ -68,7 +84,9 @@ export const TextExtractor = () => {
         </Select>
       </FormControl>
 
+
       <h3>Property Text (freeText)</h3>
+      <button onClick={generateText} style={{ marginBottom: 20 }}>Generate Text</button>
       <textarea
         rows={10}
         cols={80}
